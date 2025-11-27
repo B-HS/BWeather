@@ -1,0 +1,7 @@
+services:
+  bweather:
+    image: bweather:latest
+    container_name: bweather
+    restart: always
+    ports:
+      - "12333:3000"

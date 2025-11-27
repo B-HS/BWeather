@@ -1,0 +1,23 @@
+{
+    "name": "bweather",
+    "version": "1.0.0",
+    "type": "module",
+    "scripts": {
+        "dev": "bun run --hot index.ts",
+        "start": "bun run index.ts",
+        "build": "rm -rf ./dist && mkdir -p ./dist && bun build ./index.ts --compile --outfile ./dist/index",
+        "test": "bun test",
+        "db:setup": "bun run scripts/setup-db.ts",
+        "db:drop": "bun run scripts/drop-db.ts",
+        "db:reset": "bun run db:drop && bun run db:setup",
+        "data:convert": "bun run scripts/convert-locations.ts"
+    },
+    "dependencies": {
+        "hono": "^4.10.7"
+    },
+    "devDependencies": {
+        "@types/bun": "latest",
+        "feconfig-bhs": "^1.0.7",
+        "xlsx": "^0.18.5"
+    }
+}
