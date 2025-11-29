@@ -13,7 +13,8 @@
         "data:convert": "bun run scripts/convert-locations.ts"
     },
     "dependencies": {
-        "hono": "^4.10.7"
+        "hono": "^4.10.7",
+        "zod": "^4.1.13"
     },
     "devDependencies": {
         "@types/bun": "latest",

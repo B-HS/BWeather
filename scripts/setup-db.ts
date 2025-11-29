@@ -10,7 +10,14 @@ const main = async () => {
     const schemaFile = Bun.file('./db/schema.sql')
     const schema = await schemaFile.text()
 
-    await db.unsafe(schema)
+    const statements = schema
+        .split(';')
+        .map((s) => s.trim())
+        .filter((s) => s.length > 0)
+
+    for (const statement of statements) {
+        await db.unsafe(statement)
+    }
 
     console.log('Database setup complete!')
     await db.close()

@@ -20,7 +20,8 @@
             "@model/*": ["model/*"],
             "@repository/*": ["repository/*"],
             "@middleware/*": ["middleware/*"],
-            "@routes/*": ["routes/*"]
+            "@routes/*": ["routes/*"],
+            "@services/*": ["services/*"]
         }
     },
     "include": ["**/*.ts"],

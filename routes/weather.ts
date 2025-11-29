@@ -9,6 +9,15 @@ import { saveCurrentWeather, saveUltraForecasts, saveShortForecasts } from '@rep
 
 const weather = new Hono()
 
+const getErrorStatusCode = (errorCode: string): 500 | 502 | 503 | 404 => {
+    const statusMap: Record<string, 500 | 502 | 503 | 404> = {
+        EXTERNAL_API_ERROR: 502,
+        DATA_NOT_FOUND: 404,
+        SERVICE_UNAVAILABLE: 503,
+    }
+    return statusMap[errorCode] || 500
+}
+
 const CACHE_TTL = {
     current: 60 * 60 * 1000,
     ultra: 30 * 60 * 1000,
@@ -38,6 +47,40 @@ const resolveCoordinates = (
     }
 
     return null
+}
+
+type CoordinateResult =
+    | { success: true; coords: { gridX: number; gridY: number } }
+    | { success: false; error: { code: string; message: string } }
+
+const parseAndValidateCoordinates = (
+    nx: string | undefined,
+    ny: string | undefined,
+    location: string | undefined
+): CoordinateResult => {
+    if (!nx && !ny && !location) {
+        return {
+            success: false,
+            error: { code: 'MISSING_PARAMETERS', message: 'nx/ny or location required' },
+        }
+    }
+
+    const coords = resolveCoordinates(nx, ny, location)
+    if (!coords) {
+        return {
+            success: false,
+            error: { code: 'INVALID_COORDINATES', message: 'Invalid coordinates or location not found' },
+        }
+    }
+
+    if (!validateCoordinates(coords.gridX, coords.gridY)) {
+        return {
+            success: false,
+            error: { code: 'INVALID_COORDINATES', message: 'Coordinates out of range (nx: 1-149, ny: 1-253)' },
+        }
+    }
+
+    return { success: true, coords }
 }
 
 const parseCurrentWeather = (items: KMAWeatherItem[]) => {
@@ -71,40 +114,15 @@ const getBaseDateTime = () => {
 }
 
 weather.get('/current', async (c) => {
-    const nx = c.req.query('nx')
-    const ny = c.req.query('ny')
-    const location = c.req.query('location')
-
-    if (!nx && !ny && !location) {
-        return c.json(
-            {
-                success: false,
-                error: { code: 'MISSING_PARAMETERS', message: 'nx/ny or location required' },
-            } as ApiResponse<never>,
-            400,
-        )
+    const result = parseAndValidateCoordinates(
+        c.req.query('nx'),
+        c.req.query('ny'),
+        c.req.query('location')
+    )
+    if (!result.success) {
+        return c.json({ success: false, error: result.error } as ApiResponse<never>, 400)
     }
-
-    const coords = resolveCoordinates(nx, ny, location)
-    if (!coords) {
-        return c.json(
-            {
-                success: false,
-                error: { code: 'INVALID_COORDINATES', message: 'Invalid coordinates or location not found' },
-            } as ApiResponse<never>,
-            400,
-        )
-    }
-
-    if (!validateCoordinates(coords.gridX, coords.gridY)) {
-        return c.json(
-            {
-                success: false,
-                error: { code: 'INVALID_COORDINATES', message: 'Coordinates out of range (nx: 1-149, ny: 1-253)' },
-            } as ApiResponse<never>,
-            400,
-        )
-    }
+    const { coords } = result
 
     const { baseDate, baseTime } = getBaseDateTime()
     const cacheKey = { type: 'current' as const, gridX: coords.gridX, gridY: coords.gridY, baseDate, baseTime }
@@ -113,12 +131,12 @@ weather.get('/current', async (c) => {
         return c.json({ success: true, data: cached })
     }
 
-    const result = await getUltraSrtNcst(coords.gridX, coords.gridY)
-    if (!result.success) {
-        return c.json(result, 500)
+    const apiResult = await getUltraSrtNcst(coords.gridX, coords.gridY)
+    if (!apiResult.success) {
+        return c.json(apiResult, getErrorStatusCode(apiResult.error.code))
     }
 
-    const parsed = parseCurrentWeather(result.data)
+    const parsed = parseCurrentWeather(apiResult.data)
     const response = {
         gridX: coords.gridX,
         gridY: coords.gridY,
@@ -143,46 +161,21 @@ weather.get('/current', async (c) => {
         windSpeed: parsed.windSpeed,
         windU: parsed.windU,
         windV: parsed.windV,
-    }).catch(() => {})
+    }).catch((err) => console.error('DB save failed:', err))
 
     return c.json({ success: true, data: response })
 })
 
 weather.get('/ultra-short', async (c) => {
-    const nx = c.req.query('nx')
-    const ny = c.req.query('ny')
-    const location = c.req.query('location')
-
-    if (!nx && !ny && !location) {
-        return c.json(
-            {
-                success: false,
-                error: { code: 'MISSING_PARAMETERS', message: 'nx/ny or location required' },
-            } as ApiResponse<never>,
-            400,
-        )
+    const result = parseAndValidateCoordinates(
+        c.req.query('nx'),
+        c.req.query('ny'),
+        c.req.query('location')
+    )
+    if (!result.success) {
+        return c.json({ success: false, error: result.error } as ApiResponse<never>, 400)
     }
-
-    const coords = resolveCoordinates(nx, ny, location)
-    if (!coords) {
-        return c.json(
-            {
-                success: false,
-                error: { code: 'INVALID_COORDINATES', message: 'Invalid coordinates or location not found' },
-            } as ApiResponse<never>,
-            400,
-        )
-    }
-
-    if (!validateCoordinates(coords.gridX, coords.gridY)) {
-        return c.json(
-            {
-                success: false,
-                error: { code: 'INVALID_COORDINATES', message: 'Coordinates out of range' },
-            } as ApiResponse<never>,
-            400,
-        )
-    }
+    const { coords } = result
 
     const { baseDate, baseTime } = getBaseDateTime()
     const cacheKey = { type: 'ultra' as const, gridX: coords.gridX, gridY: coords.gridY, baseDate, baseTime }
@@ -191,13 +184,13 @@ weather.get('/ultra-short', async (c) => {
         return c.json({ success: true, data: cached })
     }
 
-    const result = await getUltraSrtFcst(coords.gridX, coords.gridY)
-    if (!result.success) {
-        return c.json(result, 500)
+    const apiResult = await getUltraSrtFcst(coords.gridX, coords.gridY)
+    if (!apiResult.success) {
+        return c.json(apiResult, getErrorStatusCode(apiResult.error.code))
     }
 
     const forecasts = new Map<string, Record<string, string>>()
-    for (const item of result.data) {
+    for (const item of apiResult.data) {
         const key = (item.fcstDate || '') + (item.fcstTime || '')
         if (!forecasts.has(key)) {
             forecasts.set(key, { fcstDate: item.fcstDate || '', fcstTime: item.fcstTime || '' })
@@ -206,8 +199,8 @@ weather.get('/ultra-short', async (c) => {
         if (entry) entry[item.category] = item.fcstValue || ''
     }
 
-    const apiBaseDate = result.data[0]?.baseDate || ''
-    const apiBaseTime = result.data[0]?.baseTime || ''
+    const apiBaseDate = apiResult.data[0]?.baseDate || ''
+    const apiBaseTime = apiResult.data[0]?.baseTime || ''
 
     const response = Array.from(forecasts.values()).map((f) => ({
         fcstDate: f.fcstDate,
@@ -245,46 +238,21 @@ weather.get('/ultra-short', async (c) => {
             windDirection: f.windDirection,
             windSpeed: f.windSpeed,
         }))
-    ).catch(() => {})
+    ).catch((err) => console.error('DB save failed:', err))
 
     return c.json({ success: true, data: responseData })
 })
 
 weather.get('/short-term', async (c) => {
-    const nx = c.req.query('nx')
-    const ny = c.req.query('ny')
-    const location = c.req.query('location')
-
-    if (!nx && !ny && !location) {
-        return c.json(
-            {
-                success: false,
-                error: { code: 'MISSING_PARAMETERS', message: 'nx/ny or location required' },
-            } as ApiResponse<never>,
-            400,
-        )
+    const result = parseAndValidateCoordinates(
+        c.req.query('nx'),
+        c.req.query('ny'),
+        c.req.query('location')
+    )
+    if (!result.success) {
+        return c.json({ success: false, error: result.error } as ApiResponse<never>, 400)
     }
-
-    const coords = resolveCoordinates(nx, ny, location)
-    if (!coords) {
-        return c.json(
-            {
-                success: false,
-                error: { code: 'INVALID_COORDINATES', message: 'Invalid coordinates or location not found' },
-            } as ApiResponse<never>,
-            400,
-        )
-    }
-
-    if (!validateCoordinates(coords.gridX, coords.gridY)) {
-        return c.json(
-            {
-                success: false,
-                error: { code: 'INVALID_COORDINATES', message: 'Coordinates out of range' },
-            } as ApiResponse<never>,
-            400,
-        )
-    }
+    const { coords } = result
 
     const { baseDate, baseTime } = getBaseDateTime()
     const cacheKey = { type: 'short' as const, gridX: coords.gridX, gridY: coords.gridY, baseDate, baseTime }
@@ -293,16 +261,16 @@ weather.get('/short-term', async (c) => {
         return c.json({ success: true, data: cached })
     }
 
-    const result = await getVilageFcst(coords.gridX, coords.gridY)
-    if (!result.success) {
-        return c.json(result, 500)
+    const apiResult = await getVilageFcst(coords.gridX, coords.gridY)
+    if (!apiResult.success) {
+        return c.json(apiResult, getErrorStatusCode(apiResult.error.code))
     }
 
-    const apiBaseDate = result.data[0]?.baseDate || ''
-    const apiBaseTime = result.data[0]?.baseTime || ''
+    const apiBaseDate = apiResult.data[0]?.baseDate || ''
+    const apiBaseTime = apiResult.data[0]?.baseTime || ''
 
     const forecasts = new Map<string, Record<string, string>>()
-    for (const item of result.data) {
+    for (const item of apiResult.data) {
         const key = (item.fcstDate || '') + (item.fcstTime || '')
         if (!forecasts.has(key)) {
             forecasts.set(key, { fcstDate: item.fcstDate || '', fcstTime: item.fcstTime || '' })
@@ -355,7 +323,7 @@ weather.get('/short-term', async (c) => {
             windDirection: f.windDirection,
             windSpeed: f.windSpeed,
         }))
-    ).catch(() => {})
+    ).catch((err) => console.error('DB save failed:', err))
 
     return c.json({ success: true, data: responseData })
 })

@@ -82,10 +82,11 @@ const fetchWithRetry = async <T>(url: string, retries = MAX_RETRIES): Promise<Ap
             }
 
             if (header.resultCode !== '00') {
+                const errorCode = mapKmaErrorCode(header.resultCode)
                 return {
                     success: false,
                     error: {
-                        code: header.resultCode,
+                        code: errorCode,
                         message: header.resultMsg,
                     },
                 }
@@ -104,8 +105,8 @@ const fetchWithRetry = async <T>(url: string, retries = MAX_RETRIES): Promise<Ap
             return {
                 success: false,
                 error: {
-                    code: 'FETCH_ERROR',
-                    message: error instanceof Error ? error.message : 'Unknown error',
+                    code: 'EXTERNAL_API_ERROR',
+                    message: error instanceof Error ? error.message : 'External API request failed',
                 },
             }
         }
@@ -114,10 +115,31 @@ const fetchWithRetry = async <T>(url: string, retries = MAX_RETRIES): Promise<Ap
     return {
         success: false,
         error: {
-            code: 'MAX_RETRIES',
-            message: 'Maximum retry attempts reached',
+            code: 'SERVICE_UNAVAILABLE',
+            message: 'Weather service temporarily unavailable',
         },
     }
+}
+
+const mapKmaErrorCode = (kmaCode: string): string => {
+    const errorMap: Record<string, string> = {
+        '01': 'EXTERNAL_API_ERROR',
+        '02': 'EXTERNAL_API_ERROR',
+        '03': 'DATA_NOT_FOUND',
+        '04': 'EXTERNAL_API_ERROR',
+        '05': 'EXTERNAL_API_ERROR',
+        '10': 'EXTERNAL_API_ERROR',
+        '11': 'EXTERNAL_API_ERROR',
+        '12': 'EXTERNAL_API_ERROR',
+        '20': 'EXTERNAL_API_ERROR',
+        '21': 'EXTERNAL_API_ERROR',
+        '22': 'EXTERNAL_API_ERROR',
+        '30': 'SERVICE_UNAVAILABLE',
+        '31': 'SERVICE_UNAVAILABLE',
+        '32': 'SERVICE_UNAVAILABLE',
+        '99': 'EXTERNAL_API_ERROR',
+    }
+    return errorMap[kmaCode] || 'EXTERNAL_API_ERROR'
 }
 
 export const getUltraSrtNcst = async (nx: number, ny: number): Promise<ApiResponse<KMAWeatherItem[]>> => {
