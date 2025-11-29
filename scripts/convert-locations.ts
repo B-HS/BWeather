@@ -2,7 +2,7 @@ import * as XLSX from 'xlsx'
 import type { Location } from '@model/types'
 
 const EXCEL_PATH = './masterdata/raw_location.xlsx'
-const OUTPUT_PATH = './data/locations.json'
+const OUTPUT_PATH = './lib/locations.json'
 
 const main = async () => {
     console.log('Reading Excel file...')
