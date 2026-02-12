@@ -11,7 +11,6 @@ import weather from '@routes/weather'
 import locations from '@routes/locations'
 import auth from '@routes/auth'
 import user from '@routes/user'
-import { weatherCache } from '@lib/weather-cache'
 
 const app = new Hono()
 
@@ -38,18 +37,12 @@ app.notFound(notFoundHandler)
 
 const port = Number(process.env.PORT) || 3000
 
-console.log(`Starting server on port ${port}...`)
-
-const shutdown = () => {
-    console.log('Shutting down gracefully...')
-    weatherCache.stopCleanup()
-    process.exit(0)
+if (process.env.VERCEL !== '1') {
+    console.log(`Starting server on port ${port}...`)
+    Bun.serve({
+        port,
+        fetch: app.fetch,
+    })
 }
 
-process.on('SIGINT', shutdown)
-process.on('SIGTERM', shutdown)
-
-export default {
-    port,
-    fetch: app.fetch,
-}
+export default app

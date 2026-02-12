@@ -44,11 +44,3 @@ jobs:
                       docker compose down
                       docker compose up -d
                       rm bweather.tar
-
-# Required Secrets:
-# - ENV_FILE: .env 파일 내용 전체
-# - SERVER_HOST: 서버 IP 또는 도메인
-# - SERVER_USERNAME: SSH 접속 사용자명
-# - SERVER_SSH_KEY: SSH 개인키 (-----BEGIN OPENSSH PRIVATE KEY----- 포함)
-# - SERVER_PORT: SSH 포트 (기본값 22)
-# - DEPLOY_PATH: 서버 배포 경로 (예: /home/user/bweather)

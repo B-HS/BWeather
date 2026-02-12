@@ -1,7 +1,6 @@
 import { Hono } from 'hono'
 import type { ApiResponse, KMAWeatherItem } from '@model/types'
 import { getUltraSrtNcst, getUltraSrtFcst, getVilageFcst, getFcstVersion } from '@lib/kma-api'
-import { weatherCache } from '@lib/weather-cache'
 import { getSkyText, getPtyText, getPtyTextShort, getRainfallText, getSnowfallText } from '@lib/weather-codes'
 import { getWindDirectionText } from '@lib/wind-direction'
 import { searchLocations } from '@repository/location.repository'
@@ -16,12 +15,6 @@ const getErrorStatusCode = (errorCode: string): 500 | 502 | 503 | 404 => {
         SERVICE_UNAVAILABLE: 503,
     }
     return statusMap[errorCode] || 500
-}
-
-const CACHE_TTL = {
-    current: 60 * 60 * 1000,
-    ultra: 30 * 60 * 1000,
-    short: 3 * 60 * 60 * 1000,
 }
 
 const validateCoordinates = (nx: number, ny: number): boolean => nx >= 1 && nx <= 149 && ny >= 1 && ny <= 253
@@ -125,11 +118,6 @@ weather.get('/current', async (c) => {
     const { coords } = result
 
     const { baseDate, baseTime } = getBaseDateTime()
-    const cacheKey = { type: 'current' as const, gridX: coords.gridX, gridY: coords.gridY, baseDate, baseTime }
-    const cached = weatherCache.get(cacheKey)
-    if (cached) {
-        return c.json({ success: true, data: cached })
-    }
 
     const apiResult = await getUltraSrtNcst(coords.gridX, coords.gridY)
     if (!apiResult.success) {
@@ -146,8 +134,6 @@ weather.get('/current', async (c) => {
         windDirectionText: getWindDirectionText(parsed.windDirection),
         ptyText: getPtyText(parsed.pty),
     }
-
-    weatherCache.set(cacheKey, response, CACHE_TTL.current)
 
     saveCurrentWeather({
         gridX: coords.gridX,
@@ -176,13 +162,6 @@ weather.get('/ultra-short', async (c) => {
         return c.json({ success: false, error: result.error } as ApiResponse<never>, 400)
     }
     const { coords } = result
-
-    const { baseDate, baseTime } = getBaseDateTime()
-    const cacheKey = { type: 'ultra' as const, gridX: coords.gridX, gridY: coords.gridY, baseDate, baseTime }
-    const cached = weatherCache.get<{ gridX: number; gridY: number; forecasts: unknown[] }>(cacheKey)
-    if (cached) {
-        return c.json({ success: true, data: cached })
-    }
 
     const apiResult = await getUltraSrtFcst(coords.gridX, coords.gridY)
     if (!apiResult.success) {
@@ -219,7 +198,6 @@ weather.get('/ultra-short', async (c) => {
     }))
 
     const responseData = { gridX: coords.gridX, gridY: coords.gridY, forecasts: response }
-    weatherCache.set(cacheKey, responseData, CACHE_TTL.ultra)
 
     saveUltraForecasts(
         coords.gridX,
@@ -253,13 +231,6 @@ weather.get('/short-term', async (c) => {
         return c.json({ success: false, error: result.error } as ApiResponse<never>, 400)
     }
     const { coords } = result
-
-    const { baseDate, baseTime } = getBaseDateTime()
-    const cacheKey = { type: 'short' as const, gridX: coords.gridX, gridY: coords.gridY, baseDate, baseTime }
-    const cached = weatherCache.get<{ gridX: number; gridY: number; forecasts: unknown[] }>(cacheKey)
-    if (cached) {
-        return c.json({ success: true, data: cached })
-    }
 
     const apiResult = await getVilageFcst(coords.gridX, coords.gridY)
     if (!apiResult.success) {
@@ -301,7 +272,6 @@ weather.get('/short-term', async (c) => {
     }))
 
     const responseData = { gridX: coords.gridX, gridY: coords.gridY, forecasts: response }
-    weatherCache.set(cacheKey, responseData, CACHE_TTL.short)
 
     saveShortForecasts(
         coords.gridX,

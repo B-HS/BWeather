@@ -129,15 +129,3 @@ export interface SuccessResponse<T> {
 
 export type ApiResponse<T> = SuccessResponse<T> | ErrorResponse
 
-export interface WeatherCacheKey {
-    type: 'current' | 'ultra' | 'short'
-    gridX: number
-    gridY: number
-    baseDate: string
-    baseTime: string
-}
-
-export interface CacheEntry<T> {
-    data: T
-    expiresAt: number
-}
