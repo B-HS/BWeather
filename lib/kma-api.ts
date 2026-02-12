@@ -1,4 +1,4 @@
-import type { ApiResponse, KMAResponse, KMAWeatherItem, KMAVersionItem } from '@model/types'
+import type { ApiResponse, KMAResponse, KMAWeatherItem, KMAVersionItem } from '../model/types'
 
 const BASE_URL = 'http://apis.data.go.kr/1360000/VilageFcstInfoService_2.0'
 const MAX_RETRIES = 3

@@ -1,9 +1,10 @@
 import type { Context, Next } from 'hono'
 import { getCookie } from 'hono/cookie'
-import { validateSession } from '@services/auth.service'
-import type { ErrorResponse } from '@model/types'
+import { validateSession } from '../services/auth.service'
+import type { ErrorResponse } from '../model/types'
+import type { HonoVariables } from '../model/hono.types'
 
-export const sessionAuth = async (c: Context, next: Next) => {
+export const sessionAuth = async (c: Context<{ Variables: HonoVariables }>, next: Next) => {
     const authtoken = getCookie(c, 'authtoken')
 
     if (!authtoken) {

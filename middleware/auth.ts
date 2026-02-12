@@ -1,8 +1,9 @@
 import type { Context, Next } from 'hono'
-import { validateApiToken } from '@services/auth.service'
-import type { ErrorResponse } from '@model/types'
+import { validateApiToken } from '../services/auth.service'
+import type { ErrorResponse } from '../model/types'
+import type { HonoVariables } from '../model/hono.types'
 
-export const apiTokenAuth = async (c: Context, next: Next) => {
+export const apiTokenAuth = async (c: Context<{ Variables: HonoVariables }>, next: Next) => {
     const apitoken = c.req.header('X-API-Token')
 
     if (!apitoken) {

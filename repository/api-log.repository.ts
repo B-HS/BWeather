@@ -1,5 +1,5 @@
-import { getDb } from '@lib/db'
-import type { ApiLog } from '@model/auth.types'
+import { getDb } from '../lib/db'
+import type { ApiLog } from '../model/auth.types'
 
 export interface CreateApiLogData {
     userid: number | null

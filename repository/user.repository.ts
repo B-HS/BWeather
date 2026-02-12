@@ -1,5 +1,5 @@
-import { getDb } from '@lib/db'
-import type { PlanLimit, PlanType, UserInternal } from '@model/auth.types'
+import { getDb } from '../lib/db'
+import type { PlanLimit, PlanType, UserInternal } from '../model/auth.types'
 
 export const createUser = async (
     username: string,

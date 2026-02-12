@@ -1,5 +1,5 @@
-import { generateToken } from '@lib/token'
-import { hashPassword, verifyPassword } from '@lib/password'
+import { generateToken } from '../lib/token'
+import { hashPassword, verifyPassword } from '../lib/password'
 import {
     createUser,
     findByUsername,
@@ -13,8 +13,8 @@ import {
     getPlanLimit,
     updateApiToken,
     updatePasswordHash,
-} from '@repository/user.repository'
-import type { User, UserInternal, AuthResponse, LoginResponse } from '@model/auth.types'
+} from '../repository/user.repository'
+import type { User, UserInternal, AuthResponse, LoginResponse } from '../model/auth.types'
 
 const MAX_FAILED_ATTEMPTS = 5
 const LOCK_DURATION_MINUTES = 30

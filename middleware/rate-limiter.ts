@@ -1,10 +1,10 @@
 import type { Context, Next } from 'hono'
-import { consumeRateLimit } from '@services/rate-limit.service'
-import type { ErrorResponse } from '@model/types'
-import type { UserInternal } from '@model/auth.types'
+import { consumeRateLimit } from '../services/rate-limit.service'
+import type { ErrorResponse } from '../model/types'
+import type { HonoVariables } from '../model/hono.types'
 
-export const rateLimiter = async (c: Context, next: Next) => {
-    const user = c.get('user') as UserInternal | undefined
+export const rateLimiter = async (c: Context<{ Variables: HonoVariables }>, next: Next) => {
+    const user = c.get('user')
 
     if (!user) {
         const response: ErrorResponse = {

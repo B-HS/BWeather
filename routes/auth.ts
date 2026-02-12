@@ -1,8 +1,8 @@
 import { Hono } from 'hono'
 import { setCookie, deleteCookie, getCookie } from 'hono/cookie'
-import { register, login, logout, validateSession } from '@services/auth.service'
-import { registerSchema, loginSchema } from '@lib/validators'
-import type { ErrorResponse } from '@model/types'
+import { register, login, logout, validateSession } from '../services/auth.service'
+import { registerSchema, loginSchema } from '../lib/validators'
+import type { ErrorResponse } from '../model/types'
 
 const auth = new Hono()
 

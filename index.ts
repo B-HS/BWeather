@@ -1,18 +1,19 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { logger } from 'hono/logger'
-import { errorHandler, notFoundHandler } from '@middleware/error-handler'
-import { apiTokenAuth } from '@middleware/auth'
-import { sessionAuth } from '@middleware/session'
-import { rateLimiter } from '@middleware/rate-limiter'
-import { requestLogger } from '@middleware/request-logger'
-import { authRateLimiter } from '@middleware/auth-rate-limiter'
-import weather from '@routes/weather'
-import locations from '@routes/locations'
-import auth from '@routes/auth'
-import user from '@routes/user'
+import { errorHandler, notFoundHandler } from './middleware/error-handler'
+import { apiTokenAuth } from './middleware/auth'
+import { sessionAuth } from './middleware/session'
+import { rateLimiter } from './middleware/rate-limiter'
+import { requestLogger } from './middleware/request-logger'
+import { authRateLimiter } from './middleware/auth-rate-limiter'
+import weather from './routes/weather'
+import locations from './routes/locations'
+import auth from './routes/auth'
+import user from './routes/user'
+import type { HonoVariables } from './model/hono.types'
 
-const app = new Hono()
+const app = new Hono<{ Variables: HonoVariables }>()
 
 app.use('*', logger())
 app.use('*', cors())

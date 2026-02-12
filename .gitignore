@@ -33,4 +33,7 @@ bun.lockb
 
 # Generated
 data/
+api/
 
+# Vercel
+.vercel

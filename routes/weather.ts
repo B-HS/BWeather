@@ -1,10 +1,10 @@
 import { Hono } from 'hono'
-import type { ApiResponse, KMAWeatherItem } from '@model/types'
-import { getUltraSrtNcst, getUltraSrtFcst, getVilageFcst, getFcstVersion } from '@lib/kma-api'
-import { getSkyText, getPtyText, getPtyTextShort, getRainfallText, getSnowfallText } from '@lib/weather-codes'
-import { getWindDirectionText } from '@lib/wind-direction'
-import { searchLocations } from '@repository/location.repository'
-import { saveCurrentWeather, saveUltraForecasts, saveShortForecasts } from '@repository/weather.repository'
+import type { ApiResponse, KMAWeatherItem } from '../model/types'
+import { getUltraSrtNcst, getUltraSrtFcst, getVilageFcst, getFcstVersion } from '../lib/kma-api'
+import { getSkyText, getPtyText, getPtyTextShort, getRainfallText, getSnowfallText } from '../lib/weather-codes'
+import { getWindDirectionText } from '../lib/wind-direction'
+import { searchLocations } from '../repository/location.repository'
+import { saveCurrentWeather, saveUltraForecasts, saveShortForecasts } from '../repository/weather.repository'
 
 const weather = new Hono()
 

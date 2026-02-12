@@ -1,4 +1,4 @@
-import type { Location } from '@model/types'
+import type { Location } from '../model/types'
 
 const CELL_SIZE = 0.1
 

@@ -1,11 +1,11 @@
 import type { Context, Next } from 'hono'
-import { createLog } from '@repository/api-log.repository'
-import type { UserInternal } from '@model/auth.types'
-import { filterSensitiveData } from '@lib/sensitive-filter'
+import { createLog } from '../repository/api-log.repository'
+import { filterSensitiveData } from '../lib/sensitive-filter'
+import type { HonoVariables } from '../model/hono.types'
 
-export const requestLogger = async (c: Context, next: Next) => {
+export const requestLogger = async (c: Context<{ Variables: HonoVariables }>, next: Next) => {
     const startTime = Date.now()
-    const user = c.get('user') as UserInternal | undefined
+    const user = c.get('user')
 
     await next()
 

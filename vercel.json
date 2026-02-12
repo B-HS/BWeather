@@ -1,3 +1,7 @@
 {
-    "bunVersion": "1.x"
+    "bunVersion": "1.x",
+    "buildCommand": "bun run vercel-build",
+    "rewrites": [
+        { "source": "/(.*)", "destination": "/api" }
+    ]
 }

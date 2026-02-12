@@ -1,5 +1,5 @@
 import type { Context, Next, ErrorHandler as HonoErrorHandler } from 'hono'
-import type { ErrorResponse } from '@model/types'
+import type { ErrorResponse } from '../model/types'
 
 export const errorHandler = async (c: Context, next: Next) => {
     try {

@@ -1,16 +1,16 @@
 import { Hono } from 'hono'
-import { getUsage } from '@services/rate-limit.service'
-import { regenerateApiToken, changePassword } from '@services/auth.service'
-import { getLogsByUser, getLogsCountByUser } from '@repository/api-log.repository'
-import { findByUserId } from '@repository/user.repository'
-import { changePasswordSchema, paginationSchema } from '@lib/validators'
-import type { UserInternal } from '@model/auth.types'
-import type { ErrorResponse } from '@model/types'
+import { getUsage } from '../services/rate-limit.service'
+import { regenerateApiToken, changePassword } from '../services/auth.service'
+import { getLogsByUser, getLogsCountByUser } from '../repository/api-log.repository'
+import { findByUserId } from '../repository/user.repository'
+import { changePasswordSchema, paginationSchema } from '../lib/validators'
+import type { ErrorResponse } from '../model/types'
+import type { HonoVariables } from '../model/hono.types'
 
-const user = new Hono()
+const user = new Hono<{ Variables: HonoVariables }>()
 
 user.get('/me', async (c) => {
-    const currentUser = c.get('user') as UserInternal
+    const currentUser = c.get('user')
 
     const userWithApiToken = await findByUserId(currentUser.userid)
     if (!userWithApiToken) {
@@ -37,7 +37,7 @@ user.get('/me', async (c) => {
 })
 
 user.get('/usage', async (c) => {
-    const currentUser = c.get('user') as UserInternal
+    const currentUser = c.get('user')
 
     const usage = await getUsage(currentUser)
 
@@ -53,7 +53,7 @@ user.get('/usage', async (c) => {
 })
 
 user.get('/logs', async (c) => {
-    const currentUser = c.get('user') as UserInternal
+    const currentUser = c.get('user')
     const parsed = paginationSchema.safeParse({
         limit: c.req.query('limit'),
         offset: c.req.query('offset'),
@@ -89,7 +89,7 @@ user.get('/logs', async (c) => {
 })
 
 user.post('/regenerate-token', async (c) => {
-    const currentUser = c.get('user') as UserInternal
+    const currentUser = c.get('user')
 
     const newToken = await regenerateApiToken(currentUser.userid)
 
@@ -100,7 +100,7 @@ user.post('/regenerate-token', async (c) => {
 })
 
 user.post('/change-password', async (c) => {
-    const currentUser = c.get('user') as UserInternal
+    const currentUser = c.get('user')
 
     let body: unknown
 

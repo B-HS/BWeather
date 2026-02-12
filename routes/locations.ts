@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
-import { getAllLocations, searchLocations, getLocationByGrid, findNearestLocation } from '@repository/location.repository'
-import { latLonToGrid, gridToLatLon } from '@lib/grid-converter'
+import { getAllLocations, searchLocations, getLocationByGrid, findNearestLocation } from '../repository/location.repository'
+import { latLonToGrid, gridToLatLon } from '../lib/grid-converter'
 
 const locations = new Hono()
 

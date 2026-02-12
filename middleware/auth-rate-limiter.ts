@@ -1,6 +1,6 @@
 import type { Context, Next } from 'hono'
-import { tryConsumeAuthQuota } from '@repository/auth-rate-limit.repository'
-import type { ErrorResponse } from '@model/types'
+import { tryConsumeAuthQuota } from '../repository/auth-rate-limit.repository'
+import type { ErrorResponse } from '../model/types'
 
 const AUTH_LIMITS: Record<string, { limit: number; windowMinutes: number }> = {
     '/api/auth/login': { limit: 5, windowMinutes: 15 },

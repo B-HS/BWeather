@@ -1,5 +1,5 @@
-import type { Location } from '@model/types'
-import { SpatialIndex } from '@lib/spatial-index'
+import type { Location } from '../model/types'
+import { SpatialIndex } from '../lib/spatial-index'
 import locationsData from '../lib/locations.json'
 
 const locations: Location[] = locationsData as Location[]

@@ -1,5 +1,5 @@
 import * as XLSX from 'xlsx'
-import type { Location } from '@model/types'
+import type { Location } from '../model/types'
 
 const EXCEL_PATH = './masterdata/raw_location.xlsx'
 const OUTPUT_PATH = './lib/locations.json'

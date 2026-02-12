@@ -3,9 +3,9 @@ import {
     countIn24Hours,
     getOldestRequestIn24Hours,
     tryConsumeQuota,
-} from '@repository/rate-limit.repository'
-import { getUserPlanLimit } from '@services/auth.service'
-import type { RateLimitResult, UserInternal } from '@model/auth.types'
+} from '../repository/rate-limit.repository'
+import { getUserPlanLimit } from './auth.service'
+import type { RateLimitResult, UserInternal } from '../model/auth.types'
 
 const getRateLimitData = async (user: UserInternal) => {
     const [limit, currentCount, oldestRequest] = await Promise.all([
